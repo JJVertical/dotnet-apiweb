@@ -1,0 +1,88 @@
+﻿@model string
+
+@{
+    ViewBag.Title = "Analyser Tools Status";
+}
+
+<head>
+    <script src="~/lib/chartjs/chart.js"></script>
+    <script>
+        var barChartData = {
+            labels: ["Analyzer Coverage", "APIPort Coverage", "Cover By All", "Not Covered"],
+            datasets: [{
+                label: 'Available',
+                backgroundColor: "#e2efda",
+                data: [64, 80, 42, 0]
+            }, {
+                label: 'Planned',
+                backgroundColor: "#fff2cc",
+                data: [42, 0, 0, 0]
+            }, {
+                label: 'Not Available',
+                backgroundColor: "#f8cbad",
+                data: [23, 49, 0, 10]
+            }]
+        };
+
+        function UpdateLegend() {
+            $legendContainer = $('#legendContainer');
+            $legendContainer.empty();
+            $legendContainer.append(window.myBar.generateLegend());
+        }
+
+        function legendCallbackOverride(chart) {
+            var text = [];
+            text.push('<div class="' + chart.id + '-legend">');
+            for (var i = 0; i < chart.data.datasets.length; i++) {
+                text.push('<span style="background-color:' + chart.data.datasets[i].backgroundColor + '; margin-right:5px">');
+                if (chart.data.datasets[i].label) {
+                    text.push(chart.data.datasets[i].label);
+                }
+                text.push('</span>');
+            }
+            text.push('</div>');
+
+            return text.join("");
+        }
+
+        window.onload = function () {
+            Chart.defaults.global.legendCallback = legendCallbackOverride;
+            Chart.defaults.global.responsive = true;
+
+            var ctx = document.getElementById("canvas").getContext("2d");
+            window.myBar = new Chart(ctx, {
+                type: 'bar',
+                data: barChartData,
+                options: {
+                    responsive: true,
+                    
+
+                    scales: {
+                        xAxes: [{
+                            stacked: true,
+                        }],
+                        yAxes: [{
+                            stacked: true,
+                            gridLines: {
+                                show: true,
+                            }
+                        }],
+
+                    }
+                }
+            });
+
+            UpdateLegend();
+        };
+    </script>
+
+</head>
+<div class="jumbotron">
+    <h3>This is the current status of the Compatibility Analysis tools coverage.</h3>
+</div>
+<div class="container-fluid">
+    <div style="width:75%; height:75%">
+        <canvas id="canvas"></canvas>
+        <div style="text-align:center" id="legendContainer"></div>
+    </div>
+</div>

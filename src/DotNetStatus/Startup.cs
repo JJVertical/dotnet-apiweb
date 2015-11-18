@@ -2,12 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.AspNet.Builder;
-using Microsoft.AspNet.Diagnostics;
 using Microsoft.AspNet.Hosting;
+using Microsoft.Dnx.Runtime;
 using Microsoft.Framework.Configuration;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
-using Microsoft.Framework.Runtime;
 using Microsoft.Fx.Portability;
 using System;
 
@@ -20,7 +19,8 @@ namespace DotNetStatus.vNext
         public Startup(IHostingEnvironment env, IApplicationEnvironment appEnv)
         {
             // Setup configuration sources.
-            var builder = new ConfigurationBuilder(appEnv.ApplicationBasePath)
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(appEnv.ApplicationBasePath)
                 .AddJsonFile("config.json")
                 .AddEnvironmentVariables();
 
@@ -35,13 +35,13 @@ namespace DotNetStatus.vNext
             if (env.IsDevelopment())
             {
                 app.UseBrowserLink();
-                app.UseErrorPage(ErrorPageOptions.ShowAll);
+                app.UseDeveloperExceptionPage();
             }
             else
             {
                 // Add Error handling middleware which catches all application specific errors and
                 // send the request to the following path or controller action.
-                app.UseErrorHandler("/Home/Error");
+                app.UseExceptionHandler("/Home/Error");
             }
 
             // Add static files to the request pipeline
@@ -58,12 +58,14 @@ namespace DotNetStatus.vNext
 
             // Add MVC services to container
             services.AddMvc();
+            services.AddLogging();
+
         }
 
         private IApiPortService CreateService(IServiceProvider arg)
         {
-            string endpoint = null;
-            if (!_configuration.TryGet("ApiPortService", out endpoint))
+            string endpoint = _configuration["ApiPortService"];
+            if (string.IsNullOrEmpty(endpoint))
             {
                 throw new ArgumentNullException("ApiPortService", "Need to specify ApiPortService in config.json");
             }
